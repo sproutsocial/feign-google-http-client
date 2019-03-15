@@ -76,9 +76,7 @@ public class GoogleHttpClient implements Client {
         // Setup headers
         final HttpHeaders headers = new HttpHeaders();
         for (final Map.Entry<String, Collection<String>> header : inputRequest.headers().entrySet()) {
-            for (final String value : header.getValue()) {
-                headers.set(header.getKey(), value);
-            }
+            headers.set(header.getKey(), header.getValue());
         }
         request.setHeaders(headers);
 
