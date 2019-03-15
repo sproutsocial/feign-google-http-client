@@ -10,4 +10,13 @@ public class GoogleHttpClientTest extends AbstractClientTest {
         return Feign.builder()
             .client(new GoogleHttpClient());
     }
+
+    // Google http client doesn't support PATCH. See: https://github.com/googleapis/google-http-java-client/issues/167
+    @Override
+    public void noResponseBodyForPatch() {
+    }
+
+    @Override
+    public void testPatch() {
+    }
 }

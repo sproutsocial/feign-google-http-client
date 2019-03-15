@@ -37,18 +37,20 @@ public class GoogleHttpClient implements Client {
     public final Response execute(final Request inputRequest,
                                   final Request.Options options) throws IOException {
         final HttpRequest request = convertRequest(inputRequest, options);
-        final HttpResponse response = request.execute();
-
+        HttpResponse response = request.execute();
         return convertResponse(inputRequest, response);
     }
 
     private final Response convertResponse(final Request inputRequest,
                                            final HttpResponse inputResponse) throws IOException {
+        final Integer contentLength = inputResponse.getHeaders().getContentLength() <= Integer.MAX_VALUE ?
+            inputResponse.getHeaders().getContentLength().intValue() :
+            null;
         return Response.builder()
+            .body(inputResponse.getContent(), contentLength)
             .status(inputResponse.getStatusCode())
             .reason(inputResponse.getStatusMessage())
             .headers(toMap(inputResponse.getHeaders()))
-            .body(inputResponse.getContent(), inputResponse.getHeaders().getContentLength().intValue())
             .request(inputRequest)
             .build();
     }
@@ -57,7 +59,7 @@ public class GoogleHttpClient implements Client {
                                              final Request.Options options) throws IOException {
         // Setup request body
         HttpContent content = null;
-        if (inputRequest.requestBody() != null) {
+        if (inputRequest.requestBody().length() > 0) {
             final Collection<String> contentTypeValues = inputRequest.headers().get("Content-Type");
             String contentType = null;
             if (contentTypeValues != null && contentTypeValues.size() > 0) {
@@ -72,19 +74,21 @@ public class GoogleHttpClient implements Client {
         final HttpRequest request = requestFactory.buildRequest(inputRequest.httpMethod().name(),
                                                                 new GenericUrl(inputRequest.url()),
                                                                 content);
-
         // Setup headers
         final HttpHeaders headers = new HttpHeaders();
         for (final Map.Entry<String, Collection<String>> header : inputRequest.headers().entrySet()) {
             headers.set(header.getKey(), header.getValue());
+        }
+        if (inputRequest.headers().get("Accept") == null) {
+            headers.setAccept("*/*");
         }
         request.setHeaders(headers);
 
         // Setup request options
         request.setReadTimeout(options.readTimeoutMillis())
             .setConnectTimeout(options.connectTimeoutMillis())
-            .setFollowRedirects(options.isFollowRedirects());
-        
+            .setFollowRedirects(options.isFollowRedirects())
+            .setThrowExceptionOnExecuteError(false);
         return request;
     }
 
