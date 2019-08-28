@@ -9,3 +9,5 @@ GitHub github = Feign.builder()
                      .client(new GoogleHttpClient())
                      .target(GitHub.class, "https://api.github.com");
 ```
+
+This client is used in [Sprout Social's](http://sproutsocial.com) production environment.
